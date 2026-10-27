@@ -43,10 +43,12 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json(appliance, { status: 201 });
-  } catch {
-    return NextResponse.json(
-      { error: "Unable to create appliance." },
-      { status: 500 },
-    );
-  }
+  } catch (error) {
+  console.error("POST /api/appliances failed:", error);
+
+  return NextResponse.json(
+    { error: "Unable to create appliance." },
+    { status: 500 }
+  );
+}
 }
