@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/get-current-user";
 
 const applianceSchema = z.object({
   name: z.string().trim().min(1).max(100),
@@ -14,12 +15,20 @@ type RouteContext = {
   params: Promise<{ id: string }>;
 };
 
-// Update an appliance
 export async function PUT(
   request: Request,
-  { params }: RouteContext,
+  { params }: RouteContext
 ) {
   try {
+    const user = await getCurrentUser();
+
+    if (!user) {
+      return NextResponse.json(
+        { error: "Please sign in." },
+        { status: 401 }
+      );
+    }
+
     const { id } = await params;
     const body: unknown = await request.json();
     const parsed = applianceSchema.safeParse(body);
@@ -27,18 +36,21 @@ export async function PUT(
     if (!parsed.success) {
       return NextResponse.json(
         { error: "Invalid appliance details." },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
-    const existing = await prisma.appliance.findUnique({
-      where: { id },
+    const existing = await prisma.appliance.findFirst({
+      where: {
+        id,
+        userId: user.id,
+      },
     });
 
     if (!existing) {
       return NextResponse.json(
         { error: "Appliance not found." },
-        { status: 404 },
+        { status: 404 }
       );
     }
 
@@ -48,30 +60,43 @@ export async function PUT(
     });
 
     return NextResponse.json(appliance);
-  } catch {
+  } catch (error) {
+    console.error("PUT /api/appliances failed:", error);
+
     return NextResponse.json(
       { error: "Unable to update appliance." },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
 
-// Delete an appliance
 export async function DELETE(
   _request: Request,
-  { params }: RouteContext,
+  { params }: RouteContext
 ) {
   try {
+    const user = await getCurrentUser();
+
+    if (!user) {
+      return NextResponse.json(
+        { error: "Please sign in." },
+        { status: 401 }
+      );
+    }
+
     const { id } = await params;
 
-    const existing = await prisma.appliance.findUnique({
-      where: { id },
+    const existing = await prisma.appliance.findFirst({
+      where: {
+        id,
+        userId: user.id,
+      },
     });
 
     if (!existing) {
       return NextResponse.json(
         { error: "Appliance not found." },
-        { status: 404 },
+        { status: 404 }
       );
     }
 
@@ -82,10 +107,12 @@ export async function DELETE(
     return NextResponse.json({
       message: "Appliance deleted successfully.",
     });
-  } catch {
+  } catch (error) {
+    console.error("DELETE /api/appliances failed:", error);
+
     return NextResponse.json(
       { error: "Unable to delete appliance." },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

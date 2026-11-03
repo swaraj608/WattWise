@@ -1,8 +1,7 @@
-
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Sidebar from "@/components/Sidebar";
+import Providers from "@/components/Providers";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,8 +14,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "WattWise | Energy Dashboard",
-  description: "Track electricity consumption and estimate your energy costs.",
+  title: "WattWise | Smart Energy Management",
+  description:
+    "Monitor electricity consumption, manage appliances, and understand your energy costs with WattWise.",
 };
 
 export default function RootLayout({
@@ -30,12 +30,7 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-screen bg-[#f7f7f3] text-stone-900">
-        <div className="flex min-h-screen">
-          <Sidebar />
-          <div className="min-w-0 flex-1">
-            {children}
-          </div>
-        </div>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

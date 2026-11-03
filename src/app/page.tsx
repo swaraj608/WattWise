@@ -1,404 +1,234 @@
-"use client";
 
-import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import {
-  Activity,
-  ArrowDownRight,
+  ArrowRight,
   ArrowUpRight,
-  IndianRupee,
-  Lightbulb,
-  LoaderCircle,
-  Plug,
-  RefreshCw,
+  Activity,
   Zap,
+  Leaf,
+  ShieldCheck,
+  Lightbulb,
+  BatteryCharging,
 } from "lucide-react";
-import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
 
-type Appliance = {
-  id: string;
-  name: string;
-  category: string;
-  wattage: number;
-  quantity: number;
-  hoursPerDay: number;
-};
-
-type Settings = {
-  tariffPerKwh: number;
-};
-
-export default function Dashboard() {
-  const [appliances, setAppliances] = useState<Appliance[]>([]);
-  const [tariff, setTariff] = useState(8);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  async function loadDashboard() {
-    setLoading(true);
-    setError("");
-
-    try {
-      const [appliancesResponse, settingsResponse] = await Promise.all([
-        fetch("/api/appliances"),
-        fetch("/api/settings"),
-      ]);
-
-      if (!appliancesResponse.ok || !settingsResponse.ok) {
-        throw new Error("Unable to load dashboard data.");
-      }
-
-      const applianceData: Appliance[] = await appliancesResponse.json();
-      const settingsData: Settings = await settingsResponse.json();
-
-      setAppliances(applianceData);
-      setTariff(settingsData.tariffPerKwh);
-    } catch {
-      setError("Could not connect to the database. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    void loadDashboard();
-  }, []);
-
-  const totals = useMemo(() => {
-    const dailyKwh = appliances.reduce(
-      (sum, item) =>
-        sum + (item.wattage * item.quantity * item.hoursPerDay) / 1000,
-      0,
-    );
-
-    return {
-      dailyKwh,
-      monthlyKwh: dailyKwh * 30,
-      monthlyCost: dailyKwh * 30 * tariff,
-      yearlyCost: dailyKwh * 365 * tariff,
-    };
-  }, [appliances, tariff]);
-
-const chartData = useMemo(
-  () =>
-    Array.from({ length: 7 }, (_, index) => ({
-      day: `Day ${index + 1}`,
-      consumption: Number(totals.dailyKwh.toFixed(2)),
-    })),
-  [totals.dailyKwh],
-);
-
-  const currency = (value: number) =>
-    new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency: "INR",
-      maximumFractionDigits: 0,
-    }).format(value);
-
-  if (loading) {
-    return (
-      <main className="flex min-h-screen items-center justify-center bg-stone-50 text-stone-600">
-        <LoaderCircle className="mr-2 animate-spin" size={20} />
-        Loading your energy data...
-      </main>
-    );
-  }
-
+export default function Home() {
   return (
-    <main className="min-h-screen bg-[#f7f7f3] text-stone-900">
-      <div className="mx-auto max-w-7xl px-5 py-8 sm:px-8 lg:px-10">
-        <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-sm font-semibold tracking-wide text-emerald-700">
-              WATTWISE / ENERGY OVERVIEW
-            </p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">
-              Your energy, understood.
-            </h1>
-            <p className="mt-2 max-w-xl text-sm leading-6 text-stone-500">
-              See where electricity goes and what it may cost over the month.
-            </p>
-          </div>
+    <main className="relative h-[100svh] min-h-[620px] overflow-hidden bg-[#f7f8f4]">
+      {/* Background decoration */}
+      <div className="pointer-events-none absolute -right-32 -top-40 h-[520px] w-[520px] rounded-full bg-emerald-100/60 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-48 -left-32 h-[480px] w-[480px] rounded-full bg-lime-100/50 blur-3xl" />
 
-          <button
-            onClick={() => void loadDashboard()}
-            className="inline-flex w-fit items-center gap-2 rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-sm font-medium shadow-sm transition hover:bg-stone-100"
+      {/* Navbar */}
+      <nav className="relative z-10 mx-auto flex w-full max-w-[1440px] items-center justify-between px-6 py-5 sm:px-10 lg:px-16">
+        <Link href="/" className="flex items-center gap-2.5">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-700 text-white shadow-lg shadow-emerald-900/15">
+            <Zap size={23} fill="currentColor" />
+          </div>
+          <span className="text-2xl font-bold tracking-tight text-stone-900">
+            Watt<span className="text-emerald-700">Wise</span>
+          </span>
+        </Link>
+
+        <div className="flex items-center gap-3">
+          <Link
+            href="/login"
+            className="rounded-full px-4 py-2.5 text-sm font-semibold text-stone-700 transition hover:bg-white"
           >
-            <RefreshCw size={16} />
-            Refresh data
-          </button>
-        </header>
+            Login
+          </Link>
+          <Link
+            href="/register"
+            className="group flex items-center gap-2 rounded-full bg-emerald-700 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-emerald-900/15 transition hover:bg-emerald-800"
+          >
+            Get Started
+            <ArrowRight
+              size={16}
+              className="transition-transform group-hover:translate-x-1"
+            />
+          </Link>
+        </div>
+      </nav>
 
-        {error && (
-          <div className="mt-6 flex items-center justify-between gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-            {error}
-            <button
-              onClick={() => void loadDashboard()}
-              className="font-semibold underline"
-            >
-              Retry
-            </button>
+      {/* Hero */}
+      <section className="relative z-10 mx-auto grid h-[calc(100svh-81px)] min-h-[539px] w-full max-w-[1440px] items-center gap-10 px-6 pb-8 pt-2 sm:px-10 lg:grid-cols-2 lg:px-16">
+        {/* Left content */}
+        <div className="relative z-10">
+          <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-white/80 px-4 py-2 text-xs font-semibold tracking-wide text-emerald-800 shadow-sm">
+            <span className="h-2 w-2 rounded-full bg-emerald-500" />
+            SMARTER ENERGY. BETTER LIVING.
           </div>
-        )}
 
-        <section className="mt-9 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <MetricCard
-            title="Estimated monthly cost"
-            value={currency(totals.monthlyCost)}
-            note={`At ₹${tariff}/kWh`}
-            icon={<IndianRupee size={19} />}
-            accent
-          />
-          <MetricCard
-            title="Monthly consumption"
-            value={`${totals.monthlyKwh.toFixed(1)} kWh`}
-            note="Based on 30 days"
-            icon={<Zap size={19} />}
-          />
-          <MetricCard
-            title="Daily consumption"
-            value={`${totals.dailyKwh.toFixed(2)} kWh`}
-            note="From your appliance usage"
-            icon={<Activity size={19} />}
-          />
-          <MetricCard
-            title="Tracked appliances"
-            value={String(appliances.length)}
-            note="Saved in your database"
-            icon={<Plug size={19} />}
-          />
-        </section>
+          <h1 className="max-w-[650px] text-[clamp(2.8rem,5.4vw,5.2rem)] font-bold leading-[1.04] tracking-[-0.055em] text-stone-900">
+            Take control
+            <br />
+            of your energy.
+            <br />
+            <span className="text-emerald-700">Own your savings.</span>
+          </h1>
 
-        <section className="mt-6 grid gap-6 lg:grid-cols-[1.6fr_1fr]">
-          <div className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm sm:p-6">
-            <div className="flex flex-wrap items-start justify-between gap-3">
+          <p className="mt-7 max-w-[510px] text-base leading-8 text-stone-600 sm:text-lg">
+            Understand where your electricity goes. Track appliance
+            consumption, estimate your bills, and make smarter energy
+            decisions — all in one place.
+          </p>
+
+          <div className="mt-9 flex flex-wrap items-center gap-4">
+            <Link
+              href="/register"
+              className="group flex items-center gap-3 rounded-xl bg-emerald-700 px-7 py-4 text-sm font-semibold text-white shadow-xl shadow-emerald-900/15 transition hover:-translate-y-0.5 hover:bg-emerald-800"
+            >
+              Start tracking for free
+              <ArrowUpRight
+                size={18}
+                className="transition-transform group-hover:translate-x-1 group-hover:-translate-y-1"
+              />
+            </Link>
+            <div className="flex items-center gap-2 text-sm font-medium text-stone-500">
+              <ShieldCheck size={18} className="text-emerald-700" />
+              Simple. Personal. Practical.
+            </div>
+          </div>
+
+          <div className="mt-12 flex flex-wrap gap-x-8 gap-y-4 border-t border-stone-200 pt-6">
+            <div className="flex items-center gap-2 text-sm text-stone-600">
+              <Activity size={17} className="text-emerald-700" />
+              Usage insights
+            </div>
+            <div className="flex items-center gap-2 text-sm text-stone-600">
+              <Zap size={17} className="text-emerald-700" />
+              Appliance tracking
+            </div>
+            <div className="flex items-center gap-2 text-sm text-stone-600">
+              <Leaf size={17} className="text-emerald-700" />
+              Smarter energy habits
+            </div>
+          </div>
+        </div>
+
+        {/* Right dashboard preview */}
+        <div className="relative mx-auto w-full max-w-[540px] lg:ml-auto">
+          <div className="absolute -right-7 -top-8 h-32 w-32 rounded-full border border-emerald-200/70" />
+          <div className="absolute -bottom-8 -left-8 h-36 w-36 rounded-full border border-lime-200/80" />
+
+          <div className="relative rounded-[28px] border border-white bg-white/90 p-4 shadow-[0_25px_90px_-25px_rgba(22,101,52,0.22)] backdrop-blur-xl sm:p-6">
+            <div className="flex items-center justify-between border-b border-stone-100 pb-5">
               <div>
-                <h2 className="font-semibold">Consumption projection</h2>
-                <p className="mt-1 text-sm text-stone-500">
-                  Estimated cumulative usage over seven days
+                <p className="text-xs font-medium text-stone-400">
+                  YOUR ENERGY OVERVIEW
+                </p>
+                <h2 className="mt-1 text-xl font-bold text-stone-900">
+                  Energy dashboard
+                </h2>
+              </div>
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
+                <BatteryCharging size={22} />
+              </div>
+            </div>
+
+            <div className="mt-5 grid grid-cols-2 gap-3">
+              <div className="rounded-2xl bg-[#f2f7f1] p-4">
+                <div className="flex items-center gap-2 text-xs font-medium text-stone-500">
+                  <Zap size={15} className="text-emerald-700" />
+                  Daily usage
+                </div>
+                <div className="mt-3 flex items-baseline gap-1">
+                  <span className="text-3xl font-bold text-stone-900">8.4</span>
+                  <span className="text-xs text-stone-500">kWh</span>
+                </div>
+                <p className="mt-2 text-xs text-emerald-700">
+                  Monitor your usage
                 </p>
               </div>
-              <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800">
-                <Activity className="mr-1 inline" size={13} />
-                Usage estimate
+
+              <div className="rounded-2xl bg-[#f8f6ef] p-4">
+                <div className="flex items-center gap-2 text-xs font-medium text-stone-500">
+                  <Activity size={15} className="text-amber-600" />
+                  Estimated bill
+                </div>
+                <div className="mt-3 flex items-baseline gap-1">
+                  <span className="text-3xl font-bold text-stone-900">₹</span>
+                  <span className="text-3xl font-bold text-stone-900">2,016</span>
+                </div>
+                <p className="mt-2 text-xs text-stone-500">
+                  Monthly estimate
+                </p>
+              </div>
+            </div>
+
+            {/* Decorative chart preview */}
+            <div className="mt-4 rounded-2xl border border-stone-100 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-bold text-stone-800">
+                    Consumption trend
+                  </p>
+                  <p className="mt-1 text-xs text-stone-400">
+                    A clearer view of your energy
+                  </p>
+                </div>
+                <span className="rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700">
+                  Weekly
+                </span>
+              </div>
+
+              <div className="mt-6 flex h-32 items-end justify-between gap-2 px-1">
+                {[42, 65, 48, 82, 58, 72, 50].map((height, index) => (
+                  <div
+                    key={index}
+                    className="flex h-full flex-1 items-end"
+                  >
+                    <div
+                      className={`w-full rounded-t-lg ${
+                        index === 3
+                          ? "bg-emerald-700"
+                          : "bg-emerald-200"
+                      }`}
+                      style={{ height: `${height}%` }}
+                    />
+                  </div>
+                ))}
+              </div>
+              <div className="mt-3 flex justify-between text-[10px] font-medium text-stone-400">
+                <span>MON</span>
+                <span>TUE</span>
+                <span>WED</span>
+                <span>THU</span>
+                <span>FRI</span>
+                <span>SAT</span>
+                <span>SUN</span>
+              </div>
+            </div>
+
+            <div className="mt-4 flex items-center gap-3 rounded-2xl bg-emerald-700 p-4 text-white">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/15">
+                <Lightbulb size={21} />
+              </div>
+              <div>
+                <p className="text-sm font-semibold">Make every unit count.</p>
+                <p className="mt-1 text-xs text-emerald-100">
+                  Small insights can lead to smarter energy choices.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="absolute -bottom-5 -right-3 hidden rounded-2xl border border-white bg-white px-4 py-3 shadow-xl sm:block">
+            <div className="flex items-center gap-2">
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+                <Leaf size={16} />
               </span>
-            </div>
-
-            <div className="mt-6 h-64 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData}>
-                  <defs>
-                    <linearGradient id="usageFill" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#0f766e" stopOpacity={0.22} />
-                      <stop offset="100%" stopColor="#0f766e" stopOpacity={0.01} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid stroke="#e7e5e4" strokeDasharray="4 4" vertical={false} />
-                  <XAxis dataKey="day" tickLine={false} axisLine={false} tick={{ fill: "#78716c", fontSize: 12 }} />
-                  <YAxis tickLine={false} axisLine={false} tick={{ fill: "#78716c", fontSize: 12 }} width={45} />
-                  <Tooltip
-                    formatter={(value) => [`${value} kWh`, "Consumption"]}
-                    contentStyle={{ borderRadius: 12, borderColor: "#e7e5e4" }}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="consumption"
-                    stroke="#0f766e"
-                    strokeWidth={2.5}
-                    fill="url(#usageFill)"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-            <p className="mt-2 text-xs leading-5 text-stone-400">
-              This is a projection from your entered daily usage, not historical
-              meter readings.
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm sm:p-6">
-            <h2 className="font-semibold">Your energy snapshot</h2>
-            <p className="mt-1 text-sm text-stone-500">
-              A quick breakdown of your current setup
-            </p>
-
-            <div className="mt-6 space-y-5">
-              <SnapshotRow
-                icon={<Lightbulb size={18} />}
-                label="Connected appliances"
-                value={String(appliances.reduce((sum, item) => sum + item.quantity, 0))}
-              />
-              <SnapshotRow
-                icon={<ArrowUpRight size={18} />}
-                label="Estimated yearly cost"
-                value={currency(totals.yearlyCost)}
-              />
-              <SnapshotRow
-                icon={<ArrowDownRight size={18} />}
-                label="Average daily cost"
-                value={currency(totals.dailyKwh * tariff)}
-              />
-            </div>
-
-            <div className="mt-7 rounded-xl bg-[#f0f5ef] p-4">
-              <p className="text-sm font-semibold text-emerald-950">
-                A useful first step
-              </p>
-              <p className="mt-1 text-sm leading-6 text-emerald-900/75">
-                Add the wattage and daily running hours of your appliances for
-                a more meaningful estimate.
-              </p>
+              <div>
+                <p className="text-xs font-bold text-stone-800">
+                  Energy awareness
+                </p>
+                <p className="text-[10px] text-stone-400">
+                  Starts with one dashboard
+                </p>
+              </div>
             </div>
           </div>
-        </section>
-
-        <section className="mt-6 rounded-2xl border border-stone-200 bg-white p-5 shadow-sm sm:p-6">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h2 className="font-semibold">Your appliances</h2>
-              <p className="mt-1 text-sm text-stone-500">
-                Usage estimates for each saved appliance
-              </p>
-            </div>
-            <span className="rounded-full bg-stone-100 px-3 py-1.5 text-xs font-medium text-stone-600">
-              {appliances.length} tracked
-            </span>
-          </div>
-
-          {appliances.length === 0 ? (
-            <div className="mt-5 rounded-xl border border-dashed border-stone-300 px-5 py-10 text-center">
-              <Plug className="mx-auto text-stone-400" size={26} />
-              <p className="mt-3 font-medium">Nothing tracked yet</p>
-              <p className="mt-1 text-sm text-stone-500">
-                Your saved appliances will appear here once you add them.
-              </p>
-              <a
-                href="/appliances"
-                className="mt-4 inline-flex rounded-lg bg-stone-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-stone-700"
-              >
-                Add your first appliance
-              </a>
-            </div>
-          ) : (
-            <div className="mt-5 overflow-x-auto">
-              <table className="w-full min-w-[560px] text-left text-sm">
-                <thead>
-                  <tr className="border-b border-stone-200 text-xs uppercase tracking-wide text-stone-500">
-                    <th className="pb-3 pr-4 font-medium">Appliance</th>
-                    <th className="pb-3 pr-4 font-medium">Power</th>
-                    <th className="pb-3 pr-4 font-medium">Daily use</th>
-                    <th className="pb-3 pr-4 font-medium">Monthly usage</th>
-                    <th className="pb-3 font-medium">Est. cost</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {appliances.map((item) => {
-                    const daily =
-                      (item.wattage * item.quantity * item.hoursPerDay) / 1000;
-                    const monthly = daily * 30;
-
-                    return (
-                      <tr key={item.id} className="border-b border-stone-100 last:border-0">
-                        <td className="py-4 pr-4">
-                          <p className="font-medium">{item.name}</p>
-                          <p className="mt-1 text-xs text-stone-500">{item.category}</p>
-                        </td>
-                        <td className="py-4 pr-4 text-stone-600">
-                          {item.wattage} W × {item.quantity}
-                        </td>
-                        <td className="py-4 pr-4 text-stone-600">
-                          {item.hoursPerDay} hrs
-                        </td>
-                        <td className="py-4 pr-4 font-medium">
-                          {monthly.toFixed(2)} kWh
-                        </td>
-                        <td className="py-4 font-medium">
-                          {currency(monthly * tariff)}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </section>
-
-        <footer className="mt-8 flex flex-col gap-2 border-t border-stone-200 pt-5 text-xs leading-5 text-stone-500 sm:flex-row sm:items-center sm:justify-between">
-          <span>WattWise · Practical insights for everyday energy use</span>
-          <span>Estimates exclude fixed charges, taxes, and tariff slabs.</span>
-        </footer>
-      </div>
+        </div>
+      </section>
     </main>
-  );
-}
-
-function MetricCard({
-  title,
-  value,
-  note,
-  icon,
-  accent = false,
-}: {
-  title: string;
-  value: string;
-  note: string;
-  icon: React.ReactNode;
-  accent?: boolean;
-}) {
-  return (
-    <div
-      className={`rounded-2xl border p-5 shadow-sm ${
-        accent
-          ? "border-emerald-900 bg-emerald-950 text-white"
-          : "border-stone-200 bg-white text-stone-900"
-      }`}
-    >
-      <div className="flex items-center justify-between gap-3">
-        <p className={`text-sm ${accent ? "text-emerald-100/75" : "text-stone-500"}`}>
-          {title}
-        </p>
-        <span
-          className={`rounded-xl p-2 ${
-            accent ? "bg-white/10 text-emerald-100" : "bg-stone-100 text-stone-700"
-          }`}
-        >
-          {icon}
-        </span>
-      </div>
-      <p className="mt-5 text-2xl font-semibold tracking-tight">{value}</p>
-      <p className={`mt-2 text-xs ${accent ? "text-emerald-100/70" : "text-stone-500"}`}>
-        {note}
-      </p>
-    </div>
-  );
-}
-
-function SnapshotRow({
-  icon,
-  label,
-  value,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="flex items-center justify-between gap-3">
-      <div className="flex items-center gap-3">
-        <span className="rounded-lg bg-stone-100 p-2 text-stone-600">
-          {icon}
-        </span>
-        <span className="text-sm text-stone-600">{label}</span>
-      </div>
-      <span className="text-sm font-semibold">{value}</span>
-    </div>
   );
 }

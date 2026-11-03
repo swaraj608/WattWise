@@ -4,15 +4,17 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { signOut } from "next-auth/react";
 import {
   LayoutDashboard,
   Plug,
   Settings,
   Zap,
+  LogOut,
 } from "lucide-react";
 
 const navigation = [
-  { name: "Dashboard", href: "/", icon: LayoutDashboard },
+  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Appliances", href: "/appliances", icon: Plug },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
@@ -23,7 +25,6 @@ export default function Sidebar() {
 
   function handleResize(e: React.PointerEvent<HTMLDivElement>) {
     if (e.buttons !== 1) return;
-
     setWidth(Math.min(360, Math.max(200, e.clientX)));
   }
 
@@ -32,7 +33,10 @@ export default function Sidebar() {
       style={{ width: `${width}px` }}
       className="relative flex min-h-screen shrink-0 flex-col border-r border-stone-200 bg-white px-5 py-7"
     >
-      <Link href="/" className="mb-10 flex items-center gap-2">
+      <Link
+        href="/dashboard"
+        className="mb-10 flex items-center gap-2"
+      >
         <div className="rounded-xl bg-emerald-950 p-2 text-white">
           <Zap size={21} />
         </div>
@@ -50,7 +54,7 @@ export default function Sidebar() {
         {navigation.map((item) => {
           const active =
             pathname === item.href ||
-            (item.href !== "/" && pathname.startsWith(item.href));
+            pathname.startsWith(`${item.href}/`);
 
           const Icon = item.icon;
 
@@ -71,15 +75,25 @@ export default function Sidebar() {
         })}
       </nav>
 
-      <div className="mt-auto rounded-xl bg-[#f0f5ef] p-4">
-        <div className="flex items-center gap-2 whitespace-nowrap text-sm font-semibold text-emerald-950">
-          <Zap size={16} />
-          Energy insights
+      <div className="mt-auto space-y-4">
+        <div className="rounded-xl bg-[#f0f5ef] p-4">
+          <div className="flex items-center gap-2 whitespace-nowrap text-sm font-semibold text-emerald-950">
+            <Zap size={16} />
+            Energy insights
+          </div>
+
+          <p className="mt-2 text-xs leading-5 text-emerald-900/70">
+            Track usage and make smarter electricity decisions.
+          </p>
         </div>
 
-        <p className="mt-2 text-xs leading-5 text-emerald-900/70">
-          Track usage and make smarter electricity decisions.
-        </p>
+        <button
+          onClick={() => signOut({ callbackUrl: "/login" })}
+          className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-red-600 transition hover:bg-red-50"
+        >
+          <LogOut size={19} />
+          Logout
+        </button>
       </div>
 
       {/* Drag handle */}
